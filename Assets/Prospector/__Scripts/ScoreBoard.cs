@@ -35,7 +35,7 @@ public class ScoreBoard : MonoBehaviour
 
     public static int SCORE
     {
-        get { return S.score;}
+        get { return S.score; }
         set { S.score = value; }
     }
 
