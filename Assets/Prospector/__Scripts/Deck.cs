@@ -21,11 +21,12 @@ public class Deck : MonoBehaviour
 
 
     // Start is called before the first frame update
-    void Start()
+    /*void Start()
     {
         InitDeck();
+        Shuffle(ref cards);
     }
-
+    */
     public void InitDeck()
     {
         SPRITE_PREFAB = prefabSprite;
@@ -72,5 +73,20 @@ public class Deck : MonoBehaviour
         return card;
     }
 
+    static public void Shuffle (ref List<Card> refCards)
+    {
+        List<Card> tCards = new List<Card>();
+
+        int ndx;
+    
+        while (refCards.Count > 0 )
+        {
+            ndx = Random.Range(0, refCards.Count);
+            tCards.Add(refCards[ndx]);
+            refCards.RemoveAt(ndx);
+        }
+
+        refCards = tCards;
+    }
   
 }
