@@ -203,11 +203,11 @@ public class Prospector : MonoBehaviour
     {
         if (won)
         {
-            Debug.Log("Game Over. You Won!");
+            ScoreManager.TALLY(eScoreEvent.gameWin);
         }
         else
         {
-            Debug.Log("Game Over. you Lost!");
+            ScoreManager.TALLY(eScoreEvent.gameLoss);
         }
 
         CardSpritesSO.RESET();
@@ -223,6 +223,9 @@ public class Prospector : MonoBehaviour
             case eCardState.drawpile:
                 S.MoveToTarget(S.Draw());
                 S.UpdateDrawPile();
+
+                ScoreManager.TALLY(eScoreEvent.draw);
+
                 break;
             case eCardState.mine:
                 bool validMatch = true;
@@ -233,6 +236,7 @@ public class Prospector : MonoBehaviour
                     S.mine.Remove(cp);
                     S.MoveToTarget(cp);
                     S.SetMineFaceUps();
+                    ScoreManager.TALLY(eScoreEvent.mine);
                 }
                 break;
         }
