@@ -11,6 +11,10 @@ public class Prospector : MonoBehaviour
 {
     private static Prospector S;
 
+    [Header("Inscribed")]
+    public float roundDelay = 2f;
+
+
     [Header("Dynamic")]
     public List<CardProspector> drawPile;
     public List<CardProspector> discardPile;
@@ -212,6 +216,14 @@ public class Prospector : MonoBehaviour
 
         CardSpritesSO.RESET();
 
+        Invoke("ReloadLevel", roundDelay);
+
+        UITextManager.GAME_OVER_UI(won);
+
+
+    }
+    void ReloadLevel()
+    {
         SceneManager.LoadScene("__Prospector_Scene_0");
     }
     static public void CARD_CLICKED(CardProspector cp)
