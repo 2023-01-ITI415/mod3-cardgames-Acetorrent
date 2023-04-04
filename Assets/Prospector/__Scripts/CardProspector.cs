@@ -5,11 +5,14 @@ using UnityEngine;
 
 // This enum defines the variable type eCardState with four named values. // a
 public enum eCardState { drawpile, mine, target, discard }
-
+public enum eCardType { silver, gold, normal }
 public class CardProspector : Card
 { // Make CardProspector extend Card // b
     [Header("Dynamic: CardProspector")]
     public eCardState state = eCardState.drawpile;
+    public eCardType cardType = eCardType.normal;
+
+    
     // c
     // The hiddenBy list stores which other cards will keep this one face down
     public List<CardProspector> hiddenBy = new

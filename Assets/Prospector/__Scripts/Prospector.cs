@@ -1,5 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Net;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using UnityEngine;
 
 using UnityEngine.SceneManagement; // We’ll need this line later in the chapter
@@ -17,7 +20,10 @@ public class Prospector : MonoBehaviour
     public List<CardProspector> drawPile;
     public List<CardProspector> discardPile;
     public List<CardProspector> mine;
+    public List<CardProspector> potentialSpecialCards;
+    public List<float> specialCardChance = new List<float> {1f, 1f, 1f, 1f, 1f };
     public CardProspector target;
+
 
     private Transform layoutAnchor;
     private Deck deck;
@@ -29,6 +35,7 @@ public class Prospector : MonoBehaviour
 
     void Start()
     {
+
         // Set the private Singleton. We’ll use this later.
         if (S != null) Debug.LogError("Attempted to set S more than once!"); // b
         S = this;
@@ -41,6 +48,12 @@ public class Prospector : MonoBehaviour
         Deck.Shuffle(ref deck.cards);
         drawPile = ConvertCardsToCardProspectors(deck.cards);
         LayoutMine();
+
+        convertToSilver();
+
+        convertToGold();
+        //DO Check and convert Cards here.
+
         MoveToTarget(Draw());
 
         // Set up the draw pile
@@ -121,11 +134,66 @@ public class Prospector : MonoBehaviour
             // Set the sorting layer of all SpriteRenderers on the Card
             cp.SetSpriteSortingLayer(slot.layer);
             mine.Add(cp); // Add this CardProspector to the List<> mine
+            potentialSpecialCards.Add(cp); //Add the cards inside the array of possible special cards.
 
             mineIdToCardDict.Add(slot.id, cp);
         }
+
+
     }
 
+    void convertToSilver()
+    {
+        foreach (float chance in specialCardChance)
+        {
+            if (Random.value <= chance)
+            {
+                int locale = Random.Range(0, potentialSpecialCards.Count);
+               
+                CardProspector tcp;
+                tcp = potentialSpecialCards[locale];
+                potentialSpecialCards.RemoveAt(locale);
+                tcp.cardType = eCardType.silver;
+
+                SpriteRenderer tsr = tcp.GetComponent<SpriteRenderer>();
+                tsr.sprite = CardSpritesSO.GET_SILVER_FRONT;
+
+
+                GameObject tgo = tcp.transform.Find("back").gameObject;
+                tsr = tgo.GetComponent<SpriteRenderer>();
+                tsr.sprite = CardSpritesSO.GET_SILVER_BACK;
+            }
+
+            
+        }
+        
+    }
+
+    void convertToGold()
+    {
+        foreach (float chance in specialCardChance)
+        {
+            if (Random.value <= chance)
+            {
+                int locale = Random.Range(0, potentialSpecialCards.Count);
+
+                CardProspector tcp;
+                tcp = potentialSpecialCards[locale];
+                potentialSpecialCards.RemoveAt(locale);
+                tcp.cardType = eCardType.gold;
+
+                SpriteRenderer tsr = tcp.GetComponent<SpriteRenderer>();
+                tsr.sprite = CardSpritesSO.GET_GOLD_FRONT;
+
+
+                GameObject tgo = tcp.transform.Find("back").gameObject;
+                tsr = tgo.GetComponent<SpriteRenderer>();
+                tsr.sprite = CardSpritesSO.GET_GOLD_BACK;
+            }
+
+
+        }
+    }
 
     /// <summary>
     /// Moves the current target card to the discardPile
@@ -267,6 +335,15 @@ public class Prospector : MonoBehaviour
                     S.MoveToTarget(cp); // Make it the target card
                     S.SetMineFaceUps();
                     ScoreManager.TALLY(eScoreEvent.mine);
+
+                    if (cp.cardType == eCardType.silver)
+                    {
+                        ScoreManager.TALLY(eScoreEvent.mine);
+                    }else if(cp.cardType == eCardType.gold)
+                    {
+                        //none
+                    }
+                    // Add a if silver card click check here
                 }
                 break;
         }
