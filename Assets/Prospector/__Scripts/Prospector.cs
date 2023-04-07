@@ -1,10 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
+using System.Data;
 using System.Net;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using UnityEngine;
-
 using UnityEngine.SceneManagement; // We’ll need this line later in the chapter
 
 [RequireComponent(typeof(Deck))]
@@ -24,6 +24,8 @@ public class Prospector : MonoBehaviour
     public List<float> specialCardChance = new List<float> {1f, 1f, 1f, 1f, 1f };
     public CardProspector target;
 
+    public CardProspector [,] gameBoard = new CardProspector[5, 5];
+
 
     private Transform layoutAnchor;
     private Deck deck;
@@ -35,6 +37,8 @@ public class Prospector : MonoBehaviour
 
     void Start()
     {
+        
+        string sceneName = SceneManager.GetActiveScene().name;
 
         // Set the private Singleton. We’ll use this later.
         if (S != null) Debug.LogError("Attempted to set S more than once!"); // b
@@ -245,6 +249,27 @@ public class Prospector : MonoBehaviour
         cp.SetSortingOrder(0);
     }
 
+    void MoveToSlot(CardProspector cp)
+    {
+        if (target == null) return;
+
+        target.SetLocalPos(new Vector3(
+                jsonLayout.multiplier.x * jsonLayout.slots[CardProspector.GET_SLOT(cp)].x,
+                jsonLayout.multiplier.y * jsonLayout.slots[CardProspector.GET_SLOT(cp)].y,
+                0));
+        target.faceUp = true;
+
+
+        gameBoard[(int)Mathf.Floor(CardProspector.GET_SLOT(cp) / 5), CardProspector.GET_SLOT(cp) - (5 *((int)Mathf.Floor(CardProspector.GET_SLOT(cp) / 5)))] = target;
+
+        Debug.Log(gameBoard[(int)Mathf.Floor(CardProspector.GET_SLOT(cp) / 5), CardProspector.GET_SLOT(cp) - (5 * ((int)Mathf.Floor(CardProspector.GET_SLOT(cp) / 5)))]);
+        target = null;
+        // Place it on top of the pile for depth sorting
+
+        cp.SetSpriteSortingLayer(jsonLayout.drawPile.layer + 1);
+
+    }
+
     /// <summary>
     /// Arranges all the cards of the drawPile to show how many are left
     /// </summary>
@@ -303,6 +328,7 @@ public class Prospector : MonoBehaviour
 
     static public void CARD_CLICKED(CardProspector cp)
     {
+        string sceneName = SceneManager.GetActiveScene().name;
         // The reaction is determined by the state of the clicked card
         switch (cp.state)
         {
@@ -310,6 +336,8 @@ public class Prospector : MonoBehaviour
                 // Clicking the target card does nothing
                 break;
             case eCardState.drawpile:
+
+                if (sceneName == "GameScene") return;
                 // Clicking *any* card in the drawPile will draw the next card
                 // Call two methods on the Prospector Singleton S
                 S.MoveToTarget(S.Draw()); // Draw a new target card
@@ -325,25 +353,45 @@ public class Prospector : MonoBehaviour
                 // If the card is face-down, it’s not valid
                 if (!cp.faceUp) validMatch = false;
 
-                // If it’s not an adjacent rank, it’s not valid
-                if (!cp.AdjacentTo(S.target)) validMatch = false;
-                // b
+                if (sceneName == "GameScene")
+                {
+                    if (cp.faceUp) return;
 
-                if (validMatch)
-                { // If it’s a valid card
-                    S.mine.Remove(cp); // Remove it from the tableau List 
-                    S.MoveToTarget(cp); // Make it the target card
-                    S.SetMineFaceUps();
-                    ScoreManager.TALLY(eScoreEvent.mine);
 
-                    if (cp.cardType == eCardType.silver)
-                    {
+                    S.MoveToSlot(cp);
+                    S.MoveToTarget(S.Draw()); // Draw a new target card
+                    S.UpdateDrawPile(); // Restack the drawPile
+
+
+
+
+                    Debug.Log("LayoutID: " + CardProspector.GET_SLOT(cp));
+                    //
+                }
+
+                if (sceneName != "GameScene")
+                {
+                    // If it’s not an adjacent rank, it’s not valid
+                    if (!cp.AdjacentTo(S.target)) validMatch = false;
+                    // b
+
+                    if (validMatch)
+                    { // If it’s a valid card
+                        S.mine.Remove(cp); // Remove it from the tableau List 
+                        S.MoveToTarget(cp); // Make it the target card
+                        S.SetMineFaceUps();
                         ScoreManager.TALLY(eScoreEvent.mine);
-                    }else if(cp.cardType == eCardType.gold)
-                    {
-                        //none
+
+                        if (cp.cardType == eCardType.silver)
+                        {
+                            ScoreManager.TALLY(eScoreEvent.mine);
+                        }
+                        else if (cp.cardType == eCardType.gold)
+                        {
+                            //none
+                        }
+                        // Add a if silver card click check here
                     }
-                    // Add a if silver card click check here
                 }
                 break;
         }
@@ -412,8 +460,9 @@ public class Prospector : MonoBehaviour
 
     void ReloadLevel()
     {
+
         // Reload the scene, resetting the game
-        SceneManager.LoadScene("__Prospector_Scene_0");
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
 
 
     }
